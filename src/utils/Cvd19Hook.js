@@ -18,12 +18,11 @@ const data = {
     qstnCrtfcNo: ''
 }
 const Cvd19Hook = () => {
-    const [list, setList] = useState([{name:'김찬빈',num:1,data:['','','']}]);
+    const [list, setList] = useState([]);
  
     const setData = useCallback((name, code, g, c) => {
         if (name === '' || code === '') return;
         const str = formToString({ ...data, qstnCrtfcNo: code, pName: encodeURI(name) })
-        console.log(str);
         let cookie;
         fetch('https://eduro.cbe.go.kr/stv_cvd_co00_011.do', {
             method: 'POST',
@@ -32,7 +31,6 @@ const Cvd19Hook = () => {
             },
             body: str
         }).then(async r => {
-            console.log(r.status);
             const raw = r.headers.raw()['set-cookie']
             cookie = raw.map(el => {
                 const temp = el.split(';');
@@ -66,7 +64,7 @@ const Cvd19Hook = () => {
                 result = { grade, classNum, total, current };
                 return data;
             })
-
+            console.log(g,c);
             const data = {
                 rtnRsltCode: 'SUCCESS',
                 schulCrseScCode: 2,
@@ -96,7 +94,6 @@ const Cvd19Hook = () => {
                 let result = r.split('<tbody>')[1].split('<tr>');
                 result.shift();
                 result = result.map(data => {
-                    console.log(data);
                     const bun = data.match(/"alignC">\d+<\/td/)[0].match(/\d+/)[0];
                     const name = data.match(/[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]+/g)[2]
                     const dd = data.match(/<td>[\d]?<\/td>/g).map(t => t.replace('<td>', '').replace('</td>', ''));
