@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Cvd19Hook from './utils/Cvd19Hook';
+import { getInfos } from './utils/Sotong';
 const electron = require('electron')
 const fs = require('fs');
 const path = require('path');
@@ -10,10 +11,9 @@ const fetch = require('electron').remote.require('electron-fetch').default;
 const TestPage = () => {
   const [list, setData] = Cvd19Hook();
   const [stduents, setStudents] = useState([]);
-  const [sotong, setSotong] = useState({
-    group: '2학년',
-
-  })
+  const [neis, setNeis] = useState([]);
+  const [time, setTime] = useState();
+  const ref = useRef();
   const [info, setInfo] = useState({
     teacher: '',
     code: '',
@@ -24,109 +24,49 @@ const TestPage = () => {
     password: '',
   })
   const userDataPath = path.join((electron.app || electron.remote.app).getPath('userData'), 'user.json');
+  const studentPath = path.join((electron.app || electron.remote.app).getPath('userData'), 'student.json');
 
   useEffect(() => {
     try {
       setInfo(JSON.parse(fs.readFileSync(userDataPath)));
+      setNeis(JSON.parse(fs.readFileSync(studentPath)));
     }
     catch (error) {
       console.log(error);
     }
   }, [])
 
-  const inputHandler = (e) => {
-    const { id, value } = e.target
-    setInfo(prev => {
-      return { ...prev, [id]: value }
-    })
+  const timmerSet = () => {
+    if (ref.current) clearInterval(ref.current);
+    else { setData(info.teacher, info.code, info.grade, info.classNum); }
+    ref.current = setInterval(() => {
+      setData(info.teacher, info.code, info.grade, info.classNum);
+      console.log('test');
+    }, time * 1000 * 60);
   }
-  const test = () => {
-    let USL_CODE;
-    fetch('https://infosys.cbe.go.kr/cbe/getUserInfo.ajax', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
-      },
-      body: `A_UID=${info.id}&A_UPW=${info.password}`
-    }).then(r => r.json())
-      .then(r => {
-        USL_CODE = r[0].USL_CODE; //학교 나이스 아이디 가져온다.
-        return fetch('https://infosys.cbe.go.kr/cbe/selectGroup.ajax', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
-          },
-          body: `NEIS_CODE=${USL_CODE}`
-        })
-      }).then(r => r.json())
-      .then(r => {
-        r = r.filter(d => {
 
-          const temp = d.GROUP_NM.replace(' ', '');
-          const temp2 = sotong.group.replace(' ', '');
-          return temp === temp2;
-        })[0]
-        const GROUP_ID = r["GROUP_ID"];
-        return fetch('https://infosys.cbe.go.kr/cbe/selectGroupMember.ajax', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
-          },
-          body: `NEIS_CODE=${USL_CODE}&GROUP_ID=${GROUP_ID}&SEARCH_TEXT=&SEARCH_TYPE=`
-        })
-      }).then(r => r.json())
-      .then(r => {
-        console.log(r);
-      })
-      ;
-
+  const sendMessage = (name) => {
+    console.log(name, stduents);
+    //GPM_NAME, GPM_PHONE
+    const target = stduents.filter(st => st.GPM_NAME.replace(' ', '') === name)
+    console.log(target);
 
   }
+  /*
+   getInfos({ id: info.id, group: info.group }).then(r => {
+              setStudents(r);
+            });
+            fs.writeFileSync(userDataPath, JSON.stringify(info));
+            setData(info.teacher, info.code, info.grade, info.classNum);
+            // setData('박성준', 'g8naew', '2', '1')
+  */
   return (
     <div>
-      <div className="box">
-        <button className="button is-fullwidth" onClick={test}>클릭</button>
-        <form>
-          <div className="field">
-            <label className="label">교사이름</label>
-            <input className="input" type="text" placeholder="교사이름" id="teacher" onChange={inputHandler} value={info.teacher}></input>
-            <label className="label">인증코드</label>
-            <input className="input" type="text" placeholder="인증코드" id="code" onChange={inputHandler} value={info.code}></input>
-            <div className="columns is-mobile">
-              <div className="column" >
-                <label className="label">학년</label>
-                <input className="input" type="number" placeholder="학년(숫자만)" id="grade" onChange={inputHandler} value={info.grade}></input>
-              </div>
-              <div className="column">
-                <label className="label">반</label>
-                <input className="input" type="number" placeholder="반(숫자만)" id="classNum" onChange={inputHandler} value={info.classNum}></input>
-              </div>
-            </div>
-            <div className="columns is-mobile">
-              <div className="column" >
-                <label className="label">소통아이디</label>
-                <input className="input" placeholder="아이디" id="id" onChange={inputHandler} value={info.id}></input>
-              </div>
-              <div className="column">
-                <label className="label">소통패스워드</label>
-                <input className="input" placeholder="소통알리미 패스워드" id="password" onChange={inputHandler} value={info.password}></input>
-              </div>
-              <div className="column">
-                <label className="label">소통그룹</label>
-                <input className="input" placeholder="우리반그룹명" id="group" onChange={inputHandler} value={info.group}></input>
-              </div>
-            </div>
-          </div>
-        </form>
-      </div>
-
-      <button className="button is-fullwidth is-primary" onClick={
-        () => {
-          fs.writeFileSync(userDataPath, JSON.stringify(info));
-          setData(info.teacher, info.code, info.grade, info.classNum);
-          // setData('박성준', 'g8naew', '2', '1')
-        }
-      }>불러오기</button>
+      <input id="time" type='number' value={time ? time : ''} style={{ width: '100%' }} placeholder="자동갱신(단위:분)" onChange={e => setTime(e.target.value)}></input>
+      <button className={`button is-fullwidth is-small ${ref.current?'is-info':'is-primary'}`} onClick={
+        timmerSet
+      }>{ref.current?'자동갱신중...':'자동갱신하기'}</button>
+      
       {list.map(d => {
         return <div key={d.num}
           style={{ borderStyle: 'solid', display: 'flex', borderRadius: '.5em', margin: '.2em' }}>
@@ -137,7 +77,7 @@ const TestPage = () => {
               <span style={{ display: 'inline-block', minWidth: '100px', textAlign: 'center', color: 'purple', margin: 'auto' }}>결과없음</span>
             </div>
             <div style={{ display: 'inline', alignItems: 'right' }}>
-              <button className="button is-small is-info">재촉하기</button>
+              <button className="button is-small is-info" onClick={() => sendMessage(d.name)}>재촉하기</button>
               <button className="button is-small is-danger">확인됌</button>
             </div>
           </>

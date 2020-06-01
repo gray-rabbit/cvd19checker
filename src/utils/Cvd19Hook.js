@@ -64,12 +64,12 @@ const Cvd19Hook = () => {
                 result = { grade, classNum, total, current };
                 return data;
             })
-            console.log(g,c);
+            const date = new Date();
             const data = {
                 rtnRsltCode: 'SUCCESS',
                 schulCrseScCode: 2,
-                srchBeginYmd: '2020.06.01',
-                srchEndYmd: '2020.06.01',
+                srchBeginYmd: `${date.getFullYear()}.${date.getMonth().length===1?'0'+date.getMonth()+1:date.getMonth()+1}.${date.getDate().length===1?'0'+date.getDate():date.getDate()}`,
+                srchEndYmd: `${date.getFullYear()}.${date.getMonth().length===1?'0'+date.getMonth()+1:date.getMonth()+1}.${date.getDate().length===1?'0'+date.getDate():date.getDate()}`,
                 srchRspns0: '',
                 srchRspns00: '',
                 srchRspns01: '',

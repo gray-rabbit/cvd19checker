@@ -1,3 +1,95 @@
+const fetch = require('electron').remote.require('electron-fetch').default;
+
+
+const getInfos = async ({ id, group }) => {
+    let data = {
+        head: {},
+        body: {
+            USL_ID: id
+        }
+    }
+    let result = await fetch('https://cbedu.cbe.go.kr/api/cbe/getTeacherData', {
+        method: 'POST',
+        headers: {
+            'Content-Type': "application/json;charset=utf8",
+        },
+        body: JSON.stringify(data)
+    })
+    result = await result.json();
+    const { SCH_CODE, USL_CLASS_NAME, USL_CODE, USL_ID, USL_NAME } = result['body']['resultData'];
+    console.log(SCH_CODE, USL_CLASS_NAME, USL_CODE, USL_ID, USL_NAME);
+
+    //2단계 주소록 리스트 가져오기
+    result = await fetch('https://cbedu.cbe.go.kr/api/cbe/getGroupPubAddress', {
+        method: 'POST',
+        headers: {
+            'Content-Type': "application/json;charset=utf8",
+        },
+        body: JSON.stringify({ head: {}, body: { NEIS_CODE: USL_CODE } })
+    })
+    result = await result.json();
+    result = result['body']['resultList'];
+    const { GROUP_ID } = result.filter(d => d.GROUP_NM === group)[0];
+
+    //3단계 그룹 주소록 가져오기
+    result = await fetch('https://cbedu.cbe.go.kr/api/cbe/getGroupPubMember', {
+        method: 'POST',
+        headers: {
+            'Content-Type': "application/json;charset=utf8",
+        },
+        body: JSON.stringify({ head: {}, body: { GROUP_ID } })
+    })
+    result = await result.json();
+    result = result['body']['resultList'];
+    return result;
+
+}
+
+// 나이스용
+// const test = () => {
+//     let USL_CODE;
+//     fetch('https://infosys.cbe.go.kr/cbe/getUserInfo.ajax', {
+//         method: 'POST',
+//         headers: {
+//             'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+//         },
+//         body: `A_UID=${info.id}&A_UPW=${info.password}`
+//     }).then(r => r.json())
+//         .then(r => {
+//             USL_CODE = r[0].USL_CODE; //학교 나이스 아이디 가져온다.
+//             return fetch('https://infosys.cbe.go.kr/cbe/selectGroup.ajax', {
+//                 method: 'POST',
+//                 headers: {
+//                     'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+//                 },
+//                 body: `NEIS_CODE=${USL_CODE}`
+//             })
+//         }).then(r => r.json())
+//         .then(r => {
+//             r = r.filter(d => {
+
+//                 const temp = d.GROUP_NM.replace(' ', '');
+//                 const temp2 = sotong.group.replace(' ', '');
+//                 return temp === temp2;
+//             })[0]
+//             const GROUP_ID = r["GROUP_ID"];
+//             return fetch('https://infosys.cbe.go.kr/cbe/selectGroupMember.ajax', {
+//                 method: 'POST',
+//                 headers: {
+//                     'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+//                 },
+//                 body: `NEIS_CODE=${USL_CODE}&GROUP_ID=${GROUP_ID}&SEARCH_TEXT=&SEARCH_TYPE=`
+//             })
+//         }).then(r => r.json())
+//         .then(r => {
+//             console.log(r);
+//         })
+//         ;
+
+
+// }
+
+export { getInfos }
 /*
 
 
@@ -10,8 +102,8 @@
 3. selectGroupMember.ajax 에서 데이터를 몽땅 끌어온다.
     form = GROUP_ID: GRP00008247
         NEIS_CODE: M100000314
-        SEARCH_TEXT: 
-        SEARCH_TYPE: 
+        SEARCH_TEXT:
+        SEARCH_TYPE:
 
 
 https://infosys.cbe.go.kr/cbe/getUserInfo.ajax
@@ -52,9 +144,9 @@ method: 'POST',
 ------------------------------------------------------
 https://infosys.cbe.go.kr/cbe/selectMsgPub.ajax
 application/x-www-form-urlencoded; charset=UTF-8
-form 
-NEIS_CODE: 
-B_TITLE: 
+form
+NEIS_CODE:
+B_TITLE:
 PAGE: 1
 PAGE_SIZE: 10
 SEARCH_TYPE: title
@@ -119,16 +211,16 @@ USL_ID: talksis1
         pushTitle: 충북소통알리미(N)
         pushMsg: 2222
         senderCode: CBE_MSG_PUB
-        reserveDate: 
+        reserveDate:
         gradeCode: null
         classCode: null
         ext: 60182^MSG_PUB|CBE_MSG_PUB^M100000314^8092029
         pIdx: 60182
         orlPhone: 0438338308
         pushMem: 01075458245
-        smsMem: 
+        smsMem:
         smsTitle: 2222
         smsMsg: 333333
     result = {"RES":"1"}
-  
+
 */
