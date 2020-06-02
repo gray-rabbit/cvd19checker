@@ -22,7 +22,7 @@
     "eject": "react-scripts eject",
     "electron-dev": "concurrently \"cross-env Browser=none npm start\" \"wait-on http://localhost:3000 &&npx nodemon --exec electron .\"",
     "postinstall": "electron-builder install-app-deps",
-    "preelectron-pack": "yarn build",
+    "preelectron-pack": "npm run build",
     "electron-pack": "electron-builder build -w"
   },
   "eslintConfig": {
@@ -48,20 +48,19 @@
     "electron": "^9.0.0",
     "electron-build": "^0.0.3",
     "electron-builder": "^22.7.0",
-    "electron-reload": "^1.5.0",
     "nodemon": "^2.0.4",
     "typescript": "^3.9.3",
     "wait-on": "^5.0.0"
   },
   "author": {
-    "name": "Your Name",
-    "email": "your.email@domain.com",
-    "url": "https://your-website.com"
+    "name": "GrayRabbiT",
+    "email": "talksis@songmyun.es.kr",
+    "url": "https://talksis.coala.dev"
   },
   "build": {
-    "appId": "com.my-website.my-app",
-    "productName": "MyApp",
-    "copyright": "Copyright © 2019 ${author}",
+    "appId": "cvd19.talksis.coala.dev",
+    "productName": "코로나체크",
+    "copyright": "Copyright © 2020 Gray",
     "mac": {
       "category": "public.app-category.utilities"
     },

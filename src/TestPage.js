@@ -19,6 +19,7 @@ const TestPage = () => {
   const [autoUpdate, setAutoUpdate] = useState(false);
   const ref = useRef();
   const history = useHistory();
+  const [error, setError] = useState({ status: false, msg: '' });
   const [info, setInfo] = useState({
     teacher: '',
     code: '',
@@ -37,10 +38,18 @@ const TestPage = () => {
     try {
       const teacher = JSON.parse(fs.readFileSync(userDataPath))
       setInfo(teacher);
-      setNeis(JSON.parse(fs.readFileSync(studentPath)));
-      console.log(teacher.id);
+      const t = JSON.parse(fs.readFileSync(studentPath));
+      setNeis(t);
+
+      if (t.length === 1) setError({ status: true, msg: 'NEIS 정보가 없습니다. ' })
       getInfos({ id: teacher.id, group: teacher.group }).then(r => {
         setStudents(r);
+      }).catch(e => {
+        if (t.length === 1) {
+          setError({ status: true, msg: '소통알리미 정보를 받을 수 없습니다. NEIS 정보가 없습니다.' })
+        } else {
+          setError({ status: true, msg: '소통알리미 정보를 받을 수 없습니다. ' })
+        }
       })
     }
     catch (error) {
@@ -57,6 +66,7 @@ const TestPage = () => {
       setAutoUpdate(false);
       return;
     }
+    console.log(info);
     setData(info.teacher, info.code, info.grade, info.classNum);
     ref.current = setInterval(() => {
       setData(info.teacher, info.code, info.grade, info.classNum);
@@ -65,7 +75,7 @@ const TestPage = () => {
 
   }
   const autoClear = (name) => {
-    console.log(name, neis);
+    if (neis.length === 1) return;
     const target = neis.filter(d => d.name === name)[0];
     console.log(target);
     autoInput({ url: target.url }).then(() => {
@@ -74,44 +84,42 @@ const TestPage = () => {
     return;
   }
   const sendMessage = (name) => {
+    if (neis.length === 1) return;
     const target = students.filter(st => st.GPM_NAME.replace(' ', '') === name)
+    const neisURL = neis.filter(d => d.name === name)[0]['url'];
     let sms = [];
     let push = [];
+    let mix = [];
     target.map(d => {
       if (d.APP_INST === 1) {
         push.push(d.GPM_PHONE);
       } else {
         sms.push(d.GPM_PHONE);
       }
+      mix.push(d.GPM_PHONE);
+      return d;
     })
-
-  }
-  const tttt = () => {
-    getInfos(info).then(r => {
+    console.log(push, sms, mix, neisURL);
+    sendSotong({
+      phoneNumber: info.phone,
+      message: '다음 링크를 사용하여 자가검진에 참여해주세요!   ' + neisURL,
+      title: '코로나 자가점진 안내',
+      targetSMS: sms,
+      targetSOTONG: push
+    }).then(r => {
       console.log(r);
+    }).catch(e => {
+      console.log(e);
     })
   }
-  const tttt2 = () => {
-    console.log(students);
-    return;
-    sendSotong(
-      {
-        phoneNumber: info.phone,
-        message: "테스트 메세지입니다",
-        targetSMS: '01075458245',
-        targetSOTONG: ''
-      }
-    )
-      .catch(e => {
-
-      }).then(r => {
-        console.log(r);
-      })
+  const sendAll = () => {
+    if (error.status) return;
+    list.map(person=>{
+      console.log(person);
+    })
   }
   return (
     <div>
-      <button onClick={tttt}>테스트버튼</button>
-      <button onClick={tttt2}>테스트버튼</button>
       <div className="field has-addons">
         <div className="control" style={{ flex: '1' }}>
           <input id="time" className="input is-small " type='number' value={time ? time : ''} style={{ width: '100%' }} placeholder="자동갱신(단위:분)" onChange={e => setTime(e.target.value)}></input>
@@ -122,6 +130,12 @@ const TestPage = () => {
           }>{autoUpdate ? '자동갱신중...(해제하기)' : '자동갱신하기'}</button>
         </div>
       </div>
+      {error.status && <div className="notification is-danger is-small" style={{ padding: '.5rem' }}>{error.msg}</div>}
+      {list.length > 0 && !error.status && <button
+        className="button is-fullwidth"
+        style={{ margin: '.5rem' }}
+        onClick={sendAll}
+      >미제출자 모두 재촉하기</button>}
       {list.map(d => {
         return <div key={d.num}
           style={{ borderStyle: 'solid', display: 'flex', borderRadius: '.5em', margin: '.2em' }}>
@@ -144,8 +158,8 @@ const TestPage = () => {
               <span style={{ display: 'inline-block', minWidth: '100px', textAlign: 'center', color: 'green', margin: 'auto' }}>등교가능</span>
             </div>
             <div style={{ display: 'inline', alignItems: 'right' }}>
-              <button className="button is-small is-info " onClick={() => sendMessage(d.name)}> 재촉하기</button>
-              <button className="button is-small is-danger" onClick={() => autoClear(d.name)} >확인!</button>
+              <button className="button is-small is-info " disabled> 재촉하기</button>
+              <button className="button is-small is-danger" disabled>확인!</button>
             </div>
           </>
           }

@@ -1,12 +1,7 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
-
 const path = require('path');
 const fetch = require('electron-fetch').default
 const isDev = require('electron-is-dev')
-
-require('electron-reload')(__dirname, {
-    electron: `${__dirname}/node_modules/electron`
-})
 
 let mainWindow;
 
@@ -19,7 +14,7 @@ function createWindow() {
             nodeIntegration: true,
         }
     })
-    mainWindow.loadURL(
+    mainWindow.loadURL( //`file://${path.join(__dirname, '../build/index.html')}`);
         isDev ?
             'http://localhost:3000' : `file://${path.join(__dirname, '../build/index.html')}`
     )
@@ -27,7 +22,6 @@ function createWindow() {
         mainWindow.webContents.openDevTools();
     }
     mainWindow.on('closed', () => mainWindow = null);
-
 
     ipcMain.on('test-message', (event, args) => {
         console.log(args, '여기는 메인임ssss');

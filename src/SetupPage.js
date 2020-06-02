@@ -9,6 +9,7 @@ const SetupPage = () => {
   const studentPath = path.join((electron.app || electron.remote.app).getPath('userData'), 'student.json');
   const [loading, setLoading] = useState(false);
   const history = useHistory();
+  const [error, setError] = useState({ status: false, msg: '' });
   const [info, setInfo] = useState({
     teacher: '',
     code: '',
@@ -23,10 +24,10 @@ const SetupPage = () => {
 
   useEffect(() => {
     try {
-      setInfo(JSON.parse(fs.readFileSync(userDataPath)));
+      setInfo({ ...info, ...JSON.parse(fs.readFileSync(userDataPath)) });
     }
     catch (error) {
-      console.log(error);
+      setError({ status: true, msg: '필수항목이 누락되었습니다.' })
     }
     try {
       setText(fs.readFileSync(studentPath));
@@ -44,6 +45,10 @@ const SetupPage = () => {
   }
 
   const parseAndSave = () => {
+    if (info.teacher === '' || info.code === '' || info.grade === "" || info.classNum === '') {
+      setError({ status: true, msg: '필수항목이 누락되었습니다.' })
+      return;
+    }
     setLoading(true);
     try {
       const neisData = txt.split('\n').map(dd => {
@@ -65,7 +70,9 @@ const SetupPage = () => {
   }
   return (
     <div>
+      {error.status&&<div className="notification is-danger is-small" style={{ marginTop: '1rem' }}>{error.msg}</div>}
       <div className="box">
+        <p>필수항목</p>
         <form>
           <div className="field">
             <label className="label">교사이름</label>
@@ -82,38 +89,40 @@ const SetupPage = () => {
                 <input className="input" type="number" placeholder="반(숫자만)" id="classNum" onChange={inputHandler} value={info.classNum}></input>
               </div>
             </div>
-            <div className="columns is-mobile">
-              <div className="column" >
-                <label className="label">소통아이디</label>
-                <input className="input" placeholder="아이디" id="id" onChange={inputHandler} value={info.id}></input>
-              </div>
-              <div className="column">
-                <label className="label">소통패스워드</label>
-                <input className="input" placeholder="소통알리미 패스워드" id="password" onChange={inputHandler} value={info.password}></input>
-              </div>
-
-            </div>
-            <div className="columns is-mobile">
-              <div className="column">
-                <label className="label">소통그룹명</label>
-                <input className="input" placeholder="우리반그룹명" id="group" onChange={inputHandler} value={info.group}></input>
-              </div>
-              <div className="column">
-                <label className="label">선생님전화번호</label>
-                <input className="input" type="number" placeholder="선생님 전화번호" id="phone" onChange={inputHandler} value={info.phone}></input>
-              </div>
-            </div>
           </div>
         </form>
+      </div>
+      <div className="box">
+        <p>선택항목(재촉하기용)</p>
+        <div className="columns is-mobile">
+          <div className="column" >
+            <label className="label">소통알리미아이디</label>
+            <input className="input" placeholder="아이디" id="id" onChange={inputHandler} value={info.id}></input>
+          </div>
+          <div className="column">
+            <label className="label">소통알리미패스워드</label>
+            <input className="input" placeholder="소통알리미 패스워드" id="password" onChange={inputHandler} value={info.password}></input>
+          </div>
+        </div>
+        <div className="columns is-mobile">
+          <div className="column">
+            <label className="label">우리반그룹명</label>
+            <input className="input" placeholder="우리반그룹명" id="group" onChange={inputHandler} value={info.group}></input>
+          </div>
+          <div className="column">
+            <label className="label">선생님전화번호</label>
+            <input className="input" type="number" placeholder="선생님 전화번호" id="phone" onChange={inputHandler} value={info.phone}></input>
+          </div>
+        </div>
         <div className="field">
-          <label className="label">나이스에서 받은 학생 코드 및 링크</label>
-          <textarea style={{ width: '100%' }} rows={10} value={txt} onChange={e => setText(e.target.value)} ></textarea>
+          <label className="label">나이스에서 받은 학생 코드 및 링크(엑셀)</label>
+          <textarea style={{ width: '100%' }} rows={3} value={txt} onChange={e => setText(e.target.value)} ></textarea>
         </div>
         <div>
           <button className={`button is-fullwidth is-primary ${loading ? 'is-loading' : ''}`} onClick={parseAndSave}>데이터 저장하기</button>
-        </div>
+        </div >
       </div>
-    </div>
+    </div >
   )
 }
 

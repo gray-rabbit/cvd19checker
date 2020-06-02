@@ -29,7 +29,7 @@ const getInfos = async ({ id, group }) => {
     teacherInfo.USL_CODE = USL_CODE;
     teacherInfo.USL_ID = USL_ID;
     teacherInfo.USL_NAME = USL_NAME;
-    
+
 
     //2단계 주소록 리스트 가져오기
     result = await fetch('https://cbedu.cbe.go.kr/api/cbe/getGroupPubAddress', {
@@ -57,7 +57,7 @@ const getInfos = async ({ id, group }) => {
     return result;
 }
 
-const sendSotong = async ({ phoneNumber, message, targetSMS, targetSOTONG }) => {
+const sendSotong = async ({ title, phoneNumber, message, targetSMS, targetSOTONG }) => {
     //1단계 Seq 코드 받기
     let result = await fetch('https://cbedu.cbe.go.kr/api/cbe/getMsgSeq', {
         method: 'POST',
@@ -68,9 +68,18 @@ const sendSotong = async ({ phoneNumber, message, targetSMS, targetSOTONG }) => 
     })
     result = await result.json()
     const SeqCode = result['body']['resultList'];
-    console.log('Seq code', SeqCode);
+    // console.log('Seq code', SeqCode);
 
     //2단계 insertMessage
+    const RECEIVER = []
+    targetSMS.map(d => {
+        RECEIVER.push(d);
+        return d;
+    })
+    targetSOTONG.map(d => {
+        RECEIVER.push(d);
+        return d;
+    })
     const dummy = {
         head: {
 
@@ -78,8 +87,8 @@ const sendSotong = async ({ phoneNumber, message, targetSMS, targetSOTONG }) => 
         body: {
             A_UID: teacherInfo.USL_NAME,
             PUSHMSG: message,
-            PUSHTITLE: "코로나 자가진단",
-            RECEIVER: targetSMS + targetSOTONG,
+            PUSHTITLE: title + message,
+            RECEIVER: RECEIVER.join(','),
             SCH_CODE: teacherInfo.SCH_CODE,
             NEIS_CODE: teacherInfo.USL_CODE,
             WRITER: teacherInfo.USL_NAME,
@@ -88,12 +97,13 @@ const sendSotong = async ({ phoneNumber, message, targetSMS, targetSOTONG }) => 
             B_IDX: SeqCode,
             pIdx: SeqCode,
             ext: `${SeqCode}^MSG_PUB|CBE_PUB^${teacherInfo.USL_CODE}`,
-            smsMem: targetSMS,
-            pushMem: targetSOTONG,
+            smsMem: targetSMS.join(','),
+            pushMem: targetSOTONG.join(','),
             orlPhone: phoneNumber,
             USL_ID: teacherInfo.USL_ID
         }
     }
+    // console.log('Seq code', dummy);
 
     result = await fetch('https://cbedu.cbe.go.kr/api/cbe/insertCbeMsg', {
         method: 'POST',
@@ -103,6 +113,7 @@ const sendSotong = async ({ phoneNumber, message, targetSMS, targetSOTONG }) => 
         body: JSON.stringify(dummy)
     })
     result = await result.json();
+    // console.log('Seq code', result);
     return result;
 }
 export { getInfos, sendSotong }

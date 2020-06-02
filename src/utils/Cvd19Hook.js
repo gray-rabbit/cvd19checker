@@ -64,6 +64,10 @@ const Cvd19Hook = () => {
                 result = { grade, classNum, total, current };
                 return data;
             })
+            const reg = new RegExp(`<option value="[0-9\/]+" class="${g}">${c}반`);
+
+            const t = r.match(reg)[0].split('"')[1]
+            console.log(t);
             const date = new Date();
             const data = {
                 rtnRsltCode: 'SUCCESS',
@@ -79,8 +83,10 @@ const Cvd19Hook = () => {
                 srchRspns09: '',
                 srchRspns12: '',
                 srchGrade: g,
-                srchClassCode: `2/0/00/${g}/0000/${c.length===2?c:'0'+c}`,
+                srchClassCode: t,
+
             }
+            console.log(data);
             return fetch(`https://eduro.cbe.go.kr/stv_cvd_co03_001.do`, {
                 method: 'POST',
                 headers: {
