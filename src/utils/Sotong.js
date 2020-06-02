@@ -1,6 +1,12 @@
 const fetch = require('electron').remote.require('electron-fetch').default;
 
-
+const teacherInfo = {
+    SCH_CODE: '', //학교코드인가??8092029
+    USL_CLASS_NAME: '', //학교 이름 송면초등학교
+    USL_CODE: '', //학교 나이스 코드
+    USL_ID: '',// 계정 ID
+    USL_NAME: '' //선생님 이름
+}
 const getInfos = async ({ id, group }) => {
     let data = {
         head: {},
@@ -17,7 +23,13 @@ const getInfos = async ({ id, group }) => {
     })
     result = await result.json();
     const { SCH_CODE, USL_CLASS_NAME, USL_CODE, USL_ID, USL_NAME } = result['body']['resultData'];
-    console.log(SCH_CODE, USL_CLASS_NAME, USL_CODE, USL_ID, USL_NAME);
+
+    teacherInfo.SCH_CODE = SCH_CODE;
+    teacherInfo.USL_CLASS_NAME = USL_CLASS_NAME;
+    teacherInfo.USL_CODE = USL_CODE;
+    teacherInfo.USL_ID = USL_ID;
+    teacherInfo.USL_NAME = USL_NAME;
+    
 
     //2단계 주소록 리스트 가져오기
     result = await fetch('https://cbedu.cbe.go.kr/api/cbe/getGroupPubAddress', {
@@ -29,6 +41,7 @@ const getInfos = async ({ id, group }) => {
     })
     result = await result.json();
     result = result['body']['resultList'];
+    console.log(result);
     const { GROUP_ID } = result.filter(d => d.GROUP_NM === group)[0];
 
     //3단계 그룹 주소록 가져오기
@@ -42,8 +55,57 @@ const getInfos = async ({ id, group }) => {
     result = await result.json();
     result = result['body']['resultList'];
     return result;
-
 }
+
+const sendSotong = async ({ phoneNumber, message, targetSMS, targetSOTONG }) => {
+    //1단계 Seq 코드 받기
+    let result = await fetch('https://cbedu.cbe.go.kr/api/cbe/getMsgSeq', {
+        method: 'POST',
+        headers: {
+            'Content-Type': "application/json;charset=utf8",
+        },
+        body: ""
+    })
+    result = await result.json()
+    const SeqCode = result['body']['resultList'];
+    console.log('Seq code', SeqCode);
+
+    //2단계 insertMessage
+    const dummy = {
+        head: {
+
+        },
+        body: {
+            A_UID: teacherInfo.USL_NAME,
+            PUSHMSG: message,
+            PUSHTITLE: "코로나 자가진단",
+            RECEIVER: targetSMS + targetSOTONG,
+            SCH_CODE: teacherInfo.SCH_CODE,
+            NEIS_CODE: teacherInfo.USL_CODE,
+            WRITER: teacherInfo.USL_NAME,
+            SCH_GRADE_CODE: 'null',
+            SCH_CLASS_CODE: 'null',
+            B_IDX: SeqCode,
+            pIdx: SeqCode,
+            ext: `${SeqCode}^MSG_PUB|CBE_PUB^${teacherInfo.USL_CODE}`,
+            smsMem: targetSMS,
+            pushMem: targetSOTONG,
+            orlPhone: phoneNumber,
+            USL_ID: teacherInfo.USL_ID
+        }
+    }
+
+    result = await fetch('https://cbedu.cbe.go.kr/api/cbe/insertCbeMsg', {
+        method: 'POST',
+        headers: {
+            'Content-Type': "application/json;charset=utf8",
+        },
+        body: JSON.stringify(dummy)
+    })
+    result = await result.json();
+    return result;
+}
+export { getInfos, sendSotong }
 
 // 나이스용
 // const test = () => {
@@ -89,7 +151,7 @@ const getInfos = async ({ id, group }) => {
 
 // }
 
-export { getInfos }
+
 /*
 
 

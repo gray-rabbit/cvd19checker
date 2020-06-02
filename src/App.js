@@ -11,9 +11,9 @@ function App() {
   return (
     <>
       <Router>
-        <div>
-          <Link to='/'>메인으로</Link>
-          <Link to='/setting'>테스트로</Link>
+        <div className="is-flex" style={{ justifyContent: 'space-around' }}>
+          <Link to='/' className="button is-small">메인</Link>
+          <Link to='/setting' className="button is-small">설정으로</Link>
         </div>
         <Switch>
           <Route exact path='/' component={TestPage} />

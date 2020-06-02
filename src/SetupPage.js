@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useHistory } from 'react-router-dom';
 const electron = require('electron')
 const fs = require('fs');
 const path = require('path');
@@ -7,6 +8,7 @@ const SetupPage = () => {
   const userDataPath = path.join((electron.app || electron.remote.app).getPath('userData'), 'user.json');
   const studentPath = path.join((electron.app || electron.remote.app).getPath('userData'), 'student.json');
   const [loading, setLoading] = useState(false);
+  const history = useHistory();
   const [info, setInfo] = useState({
     teacher: '',
     code: '',
@@ -15,6 +17,7 @@ const SetupPage = () => {
     group: '',
     id: '',
     password: '',
+    phone: '',
   })
   const [txt, setText] = useState('');
 
@@ -25,7 +28,13 @@ const SetupPage = () => {
     catch (error) {
       console.log(error);
     }
-  }, []);
+    try {
+      setText(fs.readFileSync(studentPath));
+    }
+    catch (error) {
+      console.log(error);
+    }
+  }, [userDataPath, studentPath]);
 
   const inputHandler = (e) => {
     const { id, value } = e.target
@@ -36,17 +45,23 @@ const SetupPage = () => {
 
   const parseAndSave = () => {
     setLoading(true);
-    const neisData = txt.split('\n').map(dd => {
-      const d = dd.split('\t');
-      return {
-        name: d[2],
-        code: d[11],
-        url: d[15],
-      }
-    })
+    try {
+      const neisData = txt.split('\n').map(dd => {
+        const d = dd.split('\t');
+        return {
+          name: d[2],
+          code: d[11],
+          url: d[15],
+        }
+      })
+      setText(JSON.stringify(neisData));
+      fs.writeFileSync(studentPath, JSON.stringify(neisData));
+    } catch (error) {
+      console.log(error);
+    }
     fs.writeFileSync(userDataPath, JSON.stringify(info));
-    fs.writeFileSync(studentPath, JSON.stringify(neisData));
     setLoading(false);
+    history.push('/');
   }
   return (
     <div>
@@ -76,19 +91,26 @@ const SetupPage = () => {
                 <label className="label">소통패스워드</label>
                 <input className="input" placeholder="소통알리미 패스워드" id="password" onChange={inputHandler} value={info.password}></input>
               </div>
+
+            </div>
+            <div className="columns is-mobile">
               <div className="column">
-                <label className="label">소통그룹</label>
+                <label className="label">소통그룹명</label>
                 <input className="input" placeholder="우리반그룹명" id="group" onChange={inputHandler} value={info.group}></input>
+              </div>
+              <div className="column">
+                <label className="label">선생님전화번호</label>
+                <input className="input" type="number" placeholder="선생님 전화번호" id="phone" onChange={inputHandler} value={info.phone}></input>
               </div>
             </div>
           </div>
         </form>
         <div className="field">
           <label className="label">나이스에서 받은 학생 코드 및 링크</label>
-          <textarea style={{ width: '100%' }} rows={10} placeholder onChange={e => setText(e.target.value)} ></textarea>
+          <textarea style={{ width: '100%' }} rows={10} value={txt} onChange={e => setText(e.target.value)} ></textarea>
         </div>
         <div>
-          <button className={`button is-fullwidth is-primary ${loading?'is-loading':''}`}  onClick={parseAndSave}>데이터 저장하기</button>
+          <button className={`button is-fullwidth is-primary ${loading ? 'is-loading' : ''}`} onClick={parseAndSave}>데이터 저장하기</button>
         </div>
       </div>
     </div>
