@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Route, Switch, Link } from 'react-router-dom'
+import { HashRouter as Router, Route, Switch, Link } from 'react-router-dom'
 import MainPage from './MainPage';
 import TestPage from './TestPage';
 import SetupPage from './SetupPage';
@@ -17,7 +17,7 @@ function App() {
         </div>
         <Switch>
           <Route exact path='/' component={TestPage} />
-          <Route path='/setting' component={SetupPage} />
+          <Route exact path='/setting' component={SetupPage} />
           {/* <Route exact path='/' component={MainPage} /> */}
         </Switch>
       </Router>

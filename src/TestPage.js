@@ -83,7 +83,7 @@ const TestPage = () => {
     });
     return;
   }
-  const sendMessage = (name) => {
+  const sendMessage = async (name) => {
     if (neis.length === 1) return;
     const target = students.filter(st => st.GPM_NAME.replace(' ', '') === name)
     const neisURL = neis.filter(d => d.name === name)[0]['url'];
@@ -112,10 +112,43 @@ const TestPage = () => {
       console.log(e);
     })
   }
-  const sendAll = () => {
+  const sendAll = async () => {
     if (error.status) return;
-    list.map(person=>{
-      console.log(person);
+    list.map(async person => {
+      if (person.data[0] === '') {
+        if (neis.length === 1) return;
+        const name = person.name;
+        const target = students.filter(st => st.GPM_NAME.replace(' ', '') === name)
+        const neisURL = neis.filter(d => d.name === name)[0]['url'];
+        let sms = [];
+        let push = [];
+        let mix = [];
+        target.map(d => {
+          if (d.APP_INST === 1) {
+            push.push(d.GPM_PHONE);
+          } else {
+            sms.push(d.GPM_PHONE);
+          }
+          mix.push(d.GPM_PHONE);
+          return d;
+        })
+        console.log(push, sms, mix, neisURL);
+        try {
+          const result = await sendSotong({
+            phoneNumber: info.phone,
+            message: '다음 링크를 사용하여 자가검진에 참여해주세요!   ' + neisURL,
+            title: '코로나 자가점진 안내',
+            targetSMS: sms,
+            targetSOTONG: push
+          })
+        } catch (e) {
+          console.log(e);
+        }
+
+      } else {
+        console.log("했음");
+      }
+      return person;
     })
   }
   return (

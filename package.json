@@ -59,7 +59,7 @@
   },
   "build": {
     "appId": "cvd19.talksis.coala.dev",
-    "productName": "코로나체크",
+    "productName": "Cvd19Checker",
     "copyright": "Copyright © 2020 Gray",
     "mac": {
       "category": "public.app-category.utilities"
