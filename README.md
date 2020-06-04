@@ -9,6 +9,10 @@
 
 <hr/>
 
+### 다운로드
+
+https://github.com/gray-rabbit/cvd19checker/releases/download/bata/Cvd19Checker.Setup.0.1.0.exe
+
 ## 사용법 
 
 설치를 하시고..
